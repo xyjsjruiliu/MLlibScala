@@ -69,7 +69,35 @@
  *  3, flatMapValues[U] (f : V => TraversableOnce[U]) : RDD[(K, U)]
  *    对 K, V 中的 V 值进行 flatMap 操作
  *
- *  4, combineByKey[C]
+ *  4, combineByKey[C] (createCombiner : V => C, mergeValue : (C, V) => C,
+ *        mergeCombiners : (C, C) => C, partitioner : Partitioner, mapSideCombine : Boolean = true,
+ *        serializer : Serializer = null) : RDD[(K, C)]
+ *    createCombiner : 创建组合器函数，将 V 类型值转换成 C 类型值
+ *    mergeValue : 合并值函数，将一个 V 类型值和一个 C 类型值合并成一个 C 类型值
+ *    mergeCombiner : 合并组合器函数，将两个 C 类型值合并成一个 C 类型值
+ *    partitioner : 指定分区函数
+ *    mapSideCombine : 布尔类型值，指定是否需要在 Map 端进行 combine 操作，类似于 MapReduce 中进行的 combine 操作
  *
+ *  5, foldByKey (zeroValue : V, partitioner : Partitioner)(func : (V, V) => V) : RDD[(K, V)]
+ *
+ *  6, reduceByKey (func : (V, V) => V) : RDD[(K, V)]
+ *
+ *  7, groupByKey () : RDD[(K, Iterable[V])]
+ *
+ *  8, cogroup[W] (other : RDD[(K, W)]) : RDD[(K, (Iterable[V], Iterable[W]))]
+ *    如下
+ *
+ *  9, join[W] (other : RDD[(K, W)]) : RDD[(K, (V, W))]
+ *    join, leftOuterJoin, rightOuterJoin 都是针对 RDD[K, V] 中 K 值相等的连接操作，分别对应于内连接，
+ *    左外连接，右外连接，最终都会调用 cogroup 类实现
+ *
+ *  10, leftOuterJoin[W] (other : RDD[(K, W)]) : RDD[(K, (V, Option[W]))]
+ *    如上
+ *
+ *  11, rightOuterJoin[W] (other : RDD[(K, W)]) : RDD[(K, (Option[W], V))]
+ *    如上
+ *
+ *  12, subtractByKey[W : ClassTag] (other : RDD[(K, W)]) : RDD[(K, V)]
+ *    subtractByKey 和基本转换操作 subtract 类似，只是针对 RDD[K, V] 中的 K 值来进行操作
  */
 package com.xy.lr.scala.test;
