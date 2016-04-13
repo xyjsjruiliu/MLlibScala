@@ -1,6 +1,6 @@
 /**
- * Created by xylr on 16-4-12.
- * com.xy.lr.scala.test
+ * Created by xylr on 16-4-13.
+ * com.xy.lr.scala.spark
  *
  * 一、RDD基本转换操作：
  *  1, map[U : ClassTag] (f : T => U) : RDD[U]
@@ -125,4 +125,4 @@
  *  3, saveAsHadoopFile(path : String)
  *
  */
-package com.xy.lr.scala.test;
+package com.xy.lr.scala.spark;

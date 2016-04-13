@@ -1,4 +1,4 @@
-package com.xy.lr.scala.mllibScala
+package com.xy.lr.scala.mllibScala.pagerank
 
 import org.apache.spark.rdd.RDD
 import org.apache.spark.{SparkConf, SparkContext}
