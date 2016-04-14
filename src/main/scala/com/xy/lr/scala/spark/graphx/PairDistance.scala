@@ -1,4 +1,4 @@
-package com.xy.lr.scala.mllibScala.graphx
+package com.xy.lr.scala.spark.graphx
 
 import java.io.PrintWriter
 
