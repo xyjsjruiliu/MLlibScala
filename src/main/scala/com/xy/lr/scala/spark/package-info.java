@@ -107,17 +107,34 @@
  * 四、行动操作：
  *  1, first()
  *    返回 RDD 中的第一个元素
+ *
  *  2, count()
  *    返回 RDD 中元素的个数
+ *
  *  3, reduce(f : (T, T) => T) : T
  *    对 RDD 中的元素进行二元计算，返回计算结果
+ *
  *  4, collect()/toArray() : Array[T]
+ *    以集合形式返回 RDD 的元素
+ *
  *  5, take(num : Int) : Array[T]
+ *    将 RDD 作为集合. 返回集合中[0, num - 1] 下标的元素
+ *
  *  6, top(num : Int) : Array[T]
+ *    按照默认的或者指定的排序规则, 返回前 num 个元素
+ *
  *  7, takeOrdered(num : Int) : Array[T]
+ *    以与 top 相反的排序规则, 返回前 num 个元素
+ *
  *  8, aggregate[U] (zeroValue : U)(seqOp : (U, T) => U, combOp : (U, U) => U) : U
+ *    aggregate 行动操作中主要需要提供两个函数, 一个是 seqOp 函数, 其将 RDD 中的每个分区的数据聚合成类型为 U 的值
+ *    另一个函数 combOp 将各个分区聚合起来的值合并在一起得到最终类型为 U 的返回值
+ *
  *  9, fold (zeroValue : T)(op : (T, T) => T) : T
+ *    聚合以及合并阶段都用的同一个函数
+ *
  *  10, lookup (key : K) : Seq[V]
+ *    lookup 是针对 (K, V) 类型 RDD 的行动操作, 对于给定的键值, 返回与此键值相对应的所有键值
  *
  * 五、存储行动操作：
  *  1, saveAsTextFile(path : String)
