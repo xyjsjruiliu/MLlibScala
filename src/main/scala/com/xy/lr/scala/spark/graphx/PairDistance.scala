@@ -26,8 +26,8 @@ class PairDistance {
     */
   def this(appName : String, master : String){
     this()
-    /*conf = new SparkConf().setAppName(appName).setMaster(master)
-    sc = new SparkContext(conf)*/
+    conf = new SparkConf().setAppName(appName).setMaster(master)
+    sc = new SparkContext(conf)
   }
 
   /**
@@ -65,70 +65,12 @@ class PairDistance {
 
     arrayBuffer
   }
-
-  /**
-    *
-    * @param arrayBuffer
-    */
-  def arrayToMap(arrayBuffer: ArrayBuffer[String]): Unit = {
-    val maps = arrayBuffer.map(x => {
-      val id = x.substring(0, x.indexOf(",")).toLong
-      val word = x.substring(x.indexOf(",") + 1)
-
-      (id, word)
-    })
-
-    val out = new PrintWriter("number")
-    val r  = ArrayBuffer[String]()
-    maps.map(x=>{
-      maps.map(y=>{
-        if(x._1 < y._1){
-          out.println(x._1 + "\t" + y._1)
-        }
-//          r += x._1 + "\t" + y._1
-      })
-    })
-    out.close()
-
-    println(r.size)
-
-    for (i <- r) {
-      println(i)
-    }
-
-
-    /*val rdd = sc.parallelize(arrayBuffer)
-
-    val mapRDD : RDD[(VertexId, String)] = rdd.map( x => {
-      val id = x.substring(0, x.indexOf(",")).toLong
-      val word = x.substring(x.indexOf(",") + 1)
-
-      (id, word)
-    } )*/
-
-    /*mapRDD.map( x=> {
-      var tmp : String = ""
-      mapRDD.map( y=> {
-        if (x._1 < y._1) {
-          x._1 + "\t" + y._1
-        }
-      } )
-    } )*/
-
-//    println(rdd.count())
-//    println(arrayBuffer.size)
-  }
 }
 
 object PairDistance {
   def main(args : Array[String]): Unit = {
-    val pairDistance = new PairDistance("Spark Pi", "local[2]")
-//    pairDistance.cal(args)
+    val pairDistance = new PairDistance("Spark Pi", "spark://localhost:7077")
     //导入文件
-    val list = pairDistance.loadFile("/home/xylr/Working/workspace/MLlib/data/K-means/input.txt")
-
-//    val list = pairDistance.loadFile("data/test.txt")
-    //映射
-    pairDistance.arrayToMap(list)
+//    val list = pairDistance.loadFile("/home/xylr/Working/IdeaProjects/KnowLedgeBase/chineseword/")
   }
 }

@@ -38,21 +38,16 @@
       <artifactId>hbase</artifactId>
       <version>1.0.0</version>
     </dependency>-->
-    <dependency>
+    <!--<dependency>
       <groupId>org.apache.hbase</groupId>
       <artifactId>hbase-client</artifactId>
-      <version>1.0.0</version>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.hbase</groupId>
-      <artifactId>hbase-server</artifactId>
       <version>1.0.0</version>
     </dependency>
     <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-mapreduce-client-core</artifactId>
       <version>2.6.0</version>
-    </dependency>
+    </dependency>-->
     <!--<dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-client</artifactId>
@@ -63,11 +58,11 @@
       <artifactId>hadoop-common</artifactId>
       <version>2.6.0</version>
     </dependency>
-    <dependency>
+    <!--<dependency>
       <groupId>org.apache.spark</groupId>
       <artifactId>spark-mllib_2.10</artifactId>
       <version>1.6.0</version>
-    </dependency>
+    </dependency>-->
     <dependency>
       <groupId>org.apache.spark</groupId>
       <artifactId>spark-core_2.10</artifactId>

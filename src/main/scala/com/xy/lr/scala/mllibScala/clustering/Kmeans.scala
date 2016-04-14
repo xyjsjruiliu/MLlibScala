@@ -1,6 +1,9 @@
 package com.xy.lr.scala.mllibScala.clustering
 
-import org.apache.spark.rdd.RDD
+/*import org.apache.spark.ml.clustering.KMeans
+import org.apache.spark.mllib.clustering.KMeansModel
+import org.apache.spark.mllib.linalg.Vectors
+import org.apache.spark.rdd.RDD*/
 import org.apache.spark.{SparkConf, SparkContext}
 
 import scala.collection.mutable.ArrayBuffer
@@ -10,7 +13,7 @@ import scala.collection.mutable.ArrayBuffer
   * com.xy.lr.scala.mllibScala.clustering
   */
 object Kmeans{
-  def main(args : Array[String]): Unit ={
+  /*def main(args : Array[String]): Unit ={
     if(args.length != 4){
       System.err.println("Usage : $SPARK_HOME/bin/spark-submit \n\t--class com.xy.lr.spark.myMLlib.MyKmeans "
         + "\n\tmyMLlib-1.0-SNAPSHOT.jar \n\tinputFilePath \n\tnumClusters \n\tnumIterations \n\toutputFilePath")
@@ -73,5 +76,5 @@ object Kmeans{
 
     predictRDD.saveAsTextFile(args(3))
 
-  }
+  }*/
 }
