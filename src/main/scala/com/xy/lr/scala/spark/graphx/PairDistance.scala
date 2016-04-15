@@ -79,17 +79,40 @@ class PairDistance {
     list
   }
 
-  def makeVertex (): Unit = {
+  /**
+    * 生成点集合
+    * @return
+    */
+  private def makeVertex (): RDD[(VertexId, String)] = {
+    val vertexRDD : RDD[(VertexId, String)] = this.kBSourceDataRDD.map(x => {
+      (x.getIdList, x.getDataList)
+    })
 
+    vertexRDD
   }
 
-  def makeEdge (list : ArrayBuffer[Long]): Unit = {
-    this.kBSourceDataRDD.map(x => {
+  /**
+    * 生成边集合
+    * @param list
+    * @return
+    */
+  private def makeEdge (list : ArrayBuffer[Long]): RDD[Edge[Double]] = {
+    val edgeRDD : RDD[Edge[Double]] = this.kBSourceDataRDD.map(x => {
       (x.getIdList, 1L)
     }).flatMapValues(x => {
       list
-    })
-    println(list.size)
+    }).filter(x => {
+      if(x._1 >= x._2) false
+      else true
+    }).map( x => {
+      Edge(x._1, x._2, 0.0)
+    } )
+
+    edgeRDD
+  }
+
+  def makeGraph(list : ArrayBuffer[Long]): Unit = {
+    val graph = Graph(makeVertex(), makeEdge(list))
   }
 }
 
@@ -100,6 +123,7 @@ object PairDistance {
     val list = pairDistance.loadFile(
       "/home/xylr/Working/IdeaProjects/KnowLedgeBase/chineseword/data/")
 
-    pairDistance.makeEdge(list)
+    pairDistance.makeGraph(list)
+//    pairDistance.makeEdge(list)
   }
 }
