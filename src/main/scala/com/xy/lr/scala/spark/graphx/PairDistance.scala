@@ -1,8 +1,7 @@
 package com.xy.lr.scala.spark.graphx
 
-import java.io.{File, PrintWriter}
+import java.io.File
 
-import com.xy.lr.java.tools.file.JFile
 import com.xy.lr.scala.KBSourceData
 import org.apache.spark.graphx._
 import org.apache.spark.rdd.RDD
@@ -10,15 +9,14 @@ import org.apache.spark.{SparkConf, SparkContext}
 
 import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
-import scala.math.random
 
 /**
   * Created by xylr on 16-4-6.
   * com.xy.lr.scala.mllib.graphx
   */
-class PairDistance {
-  private var conf : SparkConf = _
-  private var sc : SparkContext = _
+class PairDistance extends Serializable{
+  @transient private var conf : SparkConf = _
+  @transient private var sc : SparkContext = _
 
   private var kBSourceDataRDD : RDD[KBSourceData] = _
 
@@ -29,8 +27,8 @@ class PairDistance {
     */
   def this(appName : String, master : String){
     this()
-    /*conf = new SparkConf().setAppName(appName).setMaster(master)
-    sc = new SparkContext(conf)*/
+    conf = new SparkConf().setAppName(appName).setMaster(master)
+    sc = new SparkContext(conf)
   }
 
   /*/**
@@ -74,6 +72,11 @@ class PairDistance {
     list
   }
 
+  /**
+    * 导入文件
+    * @param fileName 文件名
+    * @return
+    */
   private def loadFiles(fileName : String) : ArrayBuffer[Long] = {
     val file = Source.fromFile(fileName)
     var kBSourceDatas : ArrayBuffer[KBSourceData] = new ArrayBuffer[KBSourceData]()
@@ -93,6 +96,11 @@ class PairDistance {
     list
   }
 
+  /**
+    *
+    * @param file
+    * @return
+    */
   private def getAllLines(file : File) : String = {
     val f = Source.fromFile(file)
     val lines = f.getLines()
@@ -121,7 +129,7 @@ class PairDistance {
 
   /**
     * 生成点集合
-    * @return
+    * @return 点RDD
     */
   private def makeVertex (): RDD[(VertexId, String)] = {
     val vertexRDD : RDD[(VertexId, String)] = kBSourceDataRDD.map(x => {
@@ -133,8 +141,8 @@ class PairDistance {
 
   /**
     * 生成边集合
-    * @param list
-    * @return
+    * @param list 顶点集合
+    * @return 边RDD
     */
   private def makeEdge (list : ArrayBuffer[Long]): RDD[Edge[Double]] = {
     val edgeRDD : RDD[Edge[Double]] = kBSourceDataRDD.map(x => {
@@ -151,31 +159,69 @@ class PairDistance {
     edgeRDD
   }
 
-  def makeGraph(fileName : String): Unit = {
-    val list = loadFile(fileName)
-    val graph : Graph[String, Double] = Graph(makeVertex(), makeEdge(list))
+  /**
+    * 生成图
+    * @param fileName 文件名
+    */
+  def makeGraph(fileName : String): Graph[String, Double] = {
+    val list = loadFiles(fileName)
+    val vertexRDD = makeVertex()
+    val edgeRDD = makeEdge(list)
+    val graph : Graph[String, Double] = Graph(vertexRDD, edgeRDD)
     graph.cache()
-
-    graph.mapTriplets(triplet => {
-      triplet.attr
+    val newGraph : Graph[String, Double] = graph.mapTriplets(triplet => {
+      calPairDistance(triplet.srcAttr, triplet.dstAttr, triplet.srcId)
     })
+    newGraph
+  }
 
+  /**
+    * 计算两点之间的距离(需要重新写)
+    * @param srcAttr 源节点信息
+    * @param dstAttr 目标节点信息
+    * @return 距离
+    */
+  private def calPairDistance(srcAttr : String, dstAttr : String, id : VertexId): Double = {
+    id
+  }
 
-    /*println(graph.vertices.count())
-    println(graph.edges.count())*/
+  /**
+    * 求最大边属性值
+    * @param graph 属性图
+    * @return 属性值
+    */
+  def getMaxDistance(graph : Graph[String, Double]): Double = {
+    val array = graph.edges.map(x => {
+      x.attr
+    }).top(1)
+
+    array(0)
+  }
+
+  /**
+    * 求最小边属性值
+    * @param graph 属性图
+    * @return 属性值
+    */
+  def getMinDistance(graph : Graph[String, Double]): Double = {
+    val array = graph.edges.map(x => {
+      x.attr
+    }).takeOrdered(1)
+
+    array(0)
   }
 }
 
-object PairDistance {
-  def main(args : Array[String]): Unit = {
-    val pairDistance = new PairDistance("Spark Pi", "spark://localhost:7077")
-
-//    pairDistance.filesTofile()
-    //导入文件
-    /*val list = pairDistance.loadFile(
-      "/home/xylr/Working/IdeaProjects/KnowLedgeBase/chineseword/data/")*/
-
-//    pairDistance.makeGraph("/home/xylr/Working/IdeaProjects/KnowLedgeBase/chineseword/data/")
-//    pairDistance.makeEdge(list)
-  }
-}
+//object PairDistance {
+//  def main(args : Array[String]): Unit = {
+//    val pairDistance = new PairDistance("Spark Pi", "local[2]")
+//    //导入文件
+//    val graph = pairDistance.makeGraph(
+//  "/home/xylr/Working/IdeaProjects/KnowLedgeBase/chineseword/test.txt")
+//
+//    val a = pairDistance.getMaxDistance(graph)
+//    val b = pairDistance.getMinDistance(graph)
+//
+//    println(a + "\t" + b)
+//  }
+//}
