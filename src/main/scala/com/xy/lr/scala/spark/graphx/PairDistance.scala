@@ -22,7 +22,6 @@ class PairDistance {
 
   private var kBSourceDataRDD : RDD[KBSourceData] = _
 
-
   /**
     * 初始化spark
     * @param appName app name
@@ -30,8 +29,8 @@ class PairDistance {
     */
   def this(appName : String, master : String){
     this()
-    conf = new SparkConf().setAppName(appName).setMaster(master)
-    sc = new SparkContext(conf)
+    /*conf = new SparkConf().setAppName(appName).setMaster(master)
+    sc = new SparkContext(conf)*/
   }
 
   /*/**
@@ -54,37 +53,78 @@ class PairDistance {
     * 导入文件
     * @param fileName file mulu
     */
-  def loadFile(fileName : String): ArrayBuffer[Long] = {
+  private def loadFile(fileName : String): ArrayBuffer[Long] = {
     val files = new File(fileName)
     var kBSourceDatas : ArrayBuffer[KBSourceData] = new ArrayBuffer[KBSourceData]()
     var list : ArrayBuffer[Long] = new ArrayBuffer[Long]()
-
     for (file <- files.listFiles()) {
       //新的数据
       val kBSourceData = new KBSourceData()
-
       val id = file.getName.substring(file.getName.indexOf("_") + 1,
         file.getName.indexOf(".txt"))
       kBSourceData.setId(id.toLong)
       list += id.toLong
-
-      val lineData = JFile.getAllLines(file).replace("\n", "")//节点数据
+//      val lineData = JFile.getAllLines(file).replace("\n", "")
+      val lineData = getAllLines(file).replace("\n", "")//节点数据
       kBSourceData.setData(lineData)
-
       kBSourceDatas += kBSourceData
     }
-
     //转换成RDD
-    this.kBSourceDataRDD = sc.parallelize(kBSourceDatas)
+    kBSourceDataRDD = sc.parallelize(kBSourceDatas)
     list
   }
+
+  private def loadFiles(fileName : String) : ArrayBuffer[Long] = {
+    val file = Source.fromFile(fileName)
+    var kBSourceDatas : ArrayBuffer[KBSourceData] = new ArrayBuffer[KBSourceData]()
+    var list : ArrayBuffer[Long] = new ArrayBuffer[Long]()
+    for (line <- file.getLines()) {
+      val kBSourceData = new KBSourceData()
+      val id = line.split("\t")(0)
+      kBSourceData.setId(id.toLong)
+      list += id.toLong
+
+      val lineData = line.split("\t")(1)
+      kBSourceData.setData(lineData)
+      kBSourceDatas += kBSourceData
+    }
+    //转换成RDD
+    kBSourceDataRDD = sc.parallelize(kBSourceDatas)
+    list
+  }
+
+  private def getAllLines(file : File) : String = {
+    val f = Source.fromFile(file)
+    val lines = f.getLines()
+    var temp = ""
+    for (line <- lines) {
+      temp += line
+    }
+    f.close()
+    temp
+  }
+
+  /*private def filesTofile(): Unit = {
+    val files = new File("/home/xylr/Working/IdeaProjects/KnowLedgeBase/chineseword/data/")
+    val out = new PrintWriter("" +
+      "/home/xylr/Working/IdeaProjects/KnowLedgeBase/chineseword/input.txt")
+
+    for (file <- files.listFiles()) {
+      val id = file.getName.substring(file.getName.indexOf("_") + 1,
+        file.getName.indexOf(".txt"))
+      val lineData = getAllLines(file).replace("\n", "")//节点数据
+
+      out.println(id + "\t" + lineData)
+    }
+    out.close()
+  }*/
 
   /**
     * 生成点集合
     * @return
     */
   private def makeVertex (): RDD[(VertexId, String)] = {
-    val vertexRDD : RDD[(VertexId, String)] = this.kBSourceDataRDD.map(x => {
+    val vertexRDD : RDD[(VertexId, String)] = kBSourceDataRDD.map(x => {
       (x.getIdList, x.getDataList)
     })
 
@@ -97,7 +137,7 @@ class PairDistance {
     * @return
     */
   private def makeEdge (list : ArrayBuffer[Long]): RDD[Edge[Double]] = {
-    val edgeRDD : RDD[Edge[Double]] = this.kBSourceDataRDD.map(x => {
+    val edgeRDD : RDD[Edge[Double]] = kBSourceDataRDD.map(x => {
       (x.getIdList, 1L)
     }).flatMapValues(x => {
       list
@@ -111,19 +151,31 @@ class PairDistance {
     edgeRDD
   }
 
-  def makeGraph(list : ArrayBuffer[Long]): Unit = {
-    val graph = Graph(makeVertex(), makeEdge(list))
+  def makeGraph(fileName : String): Unit = {
+    val list = loadFile(fileName)
+    val graph : Graph[String, Double] = Graph(makeVertex(), makeEdge(list))
+    graph.cache()
+
+    graph.mapTriplets(triplet => {
+      triplet.attr
+    })
+
+
+    /*println(graph.vertices.count())
+    println(graph.edges.count())*/
   }
 }
 
 object PairDistance {
   def main(args : Array[String]): Unit = {
-    val pairDistance = new PairDistance("Spark Pi", "local[2]")
-    //导入文件
-    val list = pairDistance.loadFile(
-      "/home/xylr/Working/IdeaProjects/KnowLedgeBase/chineseword/data/")
+    val pairDistance = new PairDistance("Spark Pi", "spark://localhost:7077")
 
-    pairDistance.makeGraph(list)
+//    pairDistance.filesTofile()
+    //导入文件
+    /*val list = pairDistance.loadFile(
+      "/home/xylr/Working/IdeaProjects/KnowLedgeBase/chineseword/data/")*/
+
+//    pairDistance.makeGraph("/home/xylr/Working/IdeaProjects/KnowLedgeBase/chineseword/data/")
 //    pairDistance.makeEdge(list)
   }
 }
