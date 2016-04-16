@@ -1,12 +1,9 @@
-package com.xy.lr.scala.mllibScala.clustering
+package com.xy.lr.scala.mllibScala
 
 /*import org.apache.spark.ml.clustering.KMeans
 import org.apache.spark.mllib.clustering.KMeansModel
 import org.apache.spark.mllib.linalg.Vectors
 import org.apache.spark.rdd.RDD*/
-import org.apache.spark.{SparkConf, SparkContext}
-
-import scala.collection.mutable.ArrayBuffer
 
 /**
   * Created by xylr on 16-4-13.
