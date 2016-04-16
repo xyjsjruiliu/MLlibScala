@@ -198,6 +198,14 @@ class PairDistance extends Serializable{
     array(0)
   }
 
+  def getMax(graph: Graph[(Double, Double), Double]) : Double = {
+    val array = graph.edges.map(x => {
+      x.attr
+    }).top(1)
+
+    array(0)
+  }
+
   /**
     * 求最小边属性值
     * @param graph 属性图
@@ -208,6 +216,13 @@ class PairDistance extends Serializable{
       x.attr
     }).takeOrdered(1)
 
+    array(0)
+  }
+
+  def getMin(graph: Graph[(Double, Double), Double]): Double = {
+    val array = graph.edges.map(x => {
+      x.attr
+    }).takeOrdered(1)
     array(0)
   }
 }

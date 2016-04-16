@@ -10,11 +10,13 @@ import org.apache.spark.graphx.Graph
 class FastClustering(master : String, appName : String, fileName : String) extends Serializable{
   @transient private var pairDistance : PairDistance = _
 
-  private var graph : Graph[String, Double] = _
+  private var graph : Graph[(Double, Double), Double] = _
 
   pairDistance = new PairDistance(appName, master)
 
-  graph = getGraph(fileName)
+  graph = getGraph(fileName).mapVertices((vertexId, attr) => {
+    (0.0, 0.0)
+  })
 
   /**
     *
@@ -27,9 +29,13 @@ class FastClustering(master : String, appName : String, fileName : String) exten
     graph
   }
 
+  /**
+    *
+    * @return
+    */
   def findDC(): Double = {
-    @transient var tmpMax : Double = pairDistance.getMaxDistance(graph)
-    @transient var tmpMin : Double = pairDistance.getMinDistance(graph)
+    @transient var tmpMax : Double = pairDistance.getMax(graph)
+    @transient var tmpMin : Double = pairDistance.getMin(graph)
 
     @transient var dc = 0.5 * (tmpMax + tmpMin)
     println(dc)
@@ -37,7 +43,7 @@ class FastClustering(master : String, appName : String, fileName : String) exten
     @transient val entrySet = graph.edges.collect()
 
     println(graph.edges.count())
-    @transient val sample = graph.vertices.count()
+    @transient val sampleSize = graph.vertices.count()
 
     for (iteration <- 1 to 100) {
       var neighbourNum : Int = 0
@@ -47,7 +53,7 @@ class FastClustering(master : String, appName : String, fileName : String) exten
       })
 
       println(iteration + "\t" +neighbourNum)
-      val neighborPercentage = neighbourNum / Math.pow(sample, 2)
+      val neighborPercentage = neighbourNum / Math.pow(sampleSize, 2)
 
       if (neighborPercentage >= 0.01 && neighborPercentage <= 0.02){
         return dc
@@ -65,12 +71,22 @@ class FastClustering(master : String, appName : String, fileName : String) exten
 
     dc
   }
+
+  def calRho(@transient dcThreshold : Double): Unit = {
+  }
+
+  def calDelta(): Unit = {
+  }
 }
 object FastClustering {
   def main(args : Array[String]): Unit = {
     val fastClustering = new FastClustering("local[2]", "FastClustering",
       "/home/xylr/Working/IdeaProjects/KnowLedgeBase/chineseword/test.txt")
-    println(fastClustering.findDC())
+//    println(fastClustering.findDC())
+    val dc = fastClustering.findDC()
+
+    fastClustering.calRho(dc)
+    fastClustering.calDelta()
 
   }
 }
