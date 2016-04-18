@@ -3,6 +3,8 @@ package com.xy.lr.scala.mllibScala.clustering
 import com.xy.lr.scala.spark.graphx.PairDistance
 import org.apache.spark.graphx.Graph
 
+import scala.collection.mutable.ArrayBuffer
+
 /**
   * Created by xylr on 16-4-15.
   * com.xy.lr.scala.mllibScala.clustering
@@ -38,6 +40,11 @@ class FastClustering(master : String, appName : String, fileName : String) exten
     @transient var tmpMin : Double = pairDistance.getMin(graph)
 
     @transient var dc = 0.5 * (tmpMax + tmpMin)
+
+    @transient var dataDC =
+      ArrayBuffer[DataFastClustering]() += new DataFastClustering(dc)
+
+
     println(dc)
 
     @transient val entrySet = graph.edges.collect()

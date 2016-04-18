@@ -3,6 +3,7 @@ package com.xy.lr.scala.spark.graphx
 import java.io.File
 
 import com.xy.lr.scala.KBSourceData
+import com.xy.lr.scala.mllibScala.clustering.DataFastClustering
 import org.apache.spark.graphx._
 import org.apache.spark.rdd.RDD
 import org.apache.spark.{SparkConf, SparkContext}
@@ -224,6 +225,10 @@ class PairDistance extends Serializable{
       x.attr
     }).takeOrdered(1)
     array(0)
+  }
+
+  def getInitDC() : RDD[DataFastClustering] = {
+
   }
 }
 
