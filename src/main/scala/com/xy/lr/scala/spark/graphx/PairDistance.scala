@@ -192,20 +192,20 @@ class PairDistance extends Serializable{
     * @param graph 属性图
     * @return 属性值
     */
-  def getMaxDistance(graph : Graph[String, Double]): Double = {
+  def getMaxDistance(graph : Graph[String, Double]): Broadcast[Double] = {
     val array = graph.edges.map(x => {
       x.attr
     }).top(1)
 
-    array(0)
+    createBroadCast(array(0))
   }
 
-  def getMax(graph: Graph[(Double, Double), Double]) : Double = {
+  def getMax(graph: Graph[(Double, Double), Double]) : Broadcast[Double] = {
     val array = graph.edges.map(x => {
       x.attr
     }).top(1)
 
-    array(0)
+    createBroadCast(array(0))
   }
 
   /**
@@ -213,33 +213,52 @@ class PairDistance extends Serializable{
     * @param graph 属性图
     * @return 属性值
     */
-  def getMinDistance(graph : Graph[String, Double]): Double = {
+  def getMinDistance(graph : Graph[String, Double]): Broadcast[Double] = {
     val array = graph.edges.map(x => {
       x.attr
     }).takeOrdered(1)
-
-    array(0)
+    createBroadCast(array(0))
   }
 
-  def getMin(graph: Graph[(Double, Double), Double]): Double = {
+  /**
+    *
+    * @param graph
+    * @return
+    */
+  def getMin(graph: Graph[(Double, Double), Double]): Broadcast[Double] = {
     val array = graph.edges.map(x => {
       x.attr
     }).takeOrdered(1)
-    array(0)
+//    array(0)
+    createBroadCast(array(0))
   }
 
+  /**
+    *
+    * @param tmpMax
+    * @param tmpMin
+    * @return
+    */
   def getInitDC(tmpMax : Double, tmpMin : Double) : RDD[DataFastClustering] = {
     val data : DataFastClustering = new DataFastClustering(0.5 * (tmpMax + tmpMin))
     val dataDC = new ArrayBuffer[DataFastClustering]() += data
     sc.parallelize(dataDC)
   }
 
-  def createAccumulator(): Accumulator[Int] ={
-    sc.accumulator(0, "My Accumulator")
+  /**
+    * 初始化累加器
+    * @return
+    */
+  def createAccumulator(initInt : Int): Accumulator[Int] ={
+    sc.accumulator(initInt, "My Accumulator")
   }
 
-  def createBoradCast(): Broadcast[Double] = {
-    sc.broadcast(1)
+  /**
+    * 创建广播变量
+    * @return
+    */
+  def createBroadCast(initDouble : Double): Broadcast[Double] = {
+    sc.broadcast(initDouble)
   }
 }
 

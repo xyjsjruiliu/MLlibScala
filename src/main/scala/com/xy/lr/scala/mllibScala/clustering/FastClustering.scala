@@ -1,6 +1,8 @@
 package com.xy.lr.scala.mllibScala.clustering
 
 import com.xy.lr.scala.spark.graphx.PairDistance
+import org.apache.spark.Accumulator
+import org.apache.spark.broadcast.Broadcast
 import org.apache.spark.graphx.Graph
 import org.apache.spark.rdd.RDD
 
@@ -37,43 +39,35 @@ class FastClustering(master : String, appName : String, fileName : String) exten
     * @return
     */
   def findDC(): Double = {
-    @transient var tmpMax : Double = pairDistance.getMax(graph)
-    @transient var tmpMin : Double = pairDistance.getMin(graph)
-    @transient var dc = 0.5 * (tmpMax + tmpMin)
+    var tmpMax : Broadcast[Double] = pairDistance.getMax(graph)
+    var tmpMin : Broadcast[Double] = pairDistance.getMin(graph)
 
-    @transient var dataDC : RDD[Double] =
-      pairDistance.getInitDC(tmpMax, tmpMin).map(x => {
-        x.getDC()
-      })
+    var tmpDC : Broadcast[Double] =
+      pairDistance.createBroadCast(0.5 * (tmpMax.value + tmpMin.value))
 
-    @transient val entrySet = graph.edges
-    @transient val sampleSize = graph.vertices.count()
+    val sampleSize = graph.vertices.count()
 
     for (iteration <- 1 to 100) {
-      var neighbourNum = pairDistance.createAccumulator()
+      var neighbourNum : Accumulator[Int] = pairDistance.createAccumulator(0)
+      graph.edges.map(x => {
+        if (x.attr < tmpDC.value) neighbourNum += 2
+      }).count()
 
-      entrySet.map(x => {
-        if (x.attr < dc) neighbourNum += 2
-      })
-
-//      println(iteration + "\t" +neighbourNum)
-      val neighborPercentage = neighbourNum.value / Math.pow(sampleSize, 2)
-
-      if (neighborPercentage >= 0.01 && neighborPercentage <= 0.02){
-        return dc
+      println(neighbourNum.value)
+      val neighborPercentage = pairDistance.createBroadCast(
+        neighbourNum.value / Math.pow(sampleSize, 2))
+      if (neighborPercentage.value >= 0.01 && neighborPercentage.value <= 0.02)
+        tmpDC.value
+      if (neighborPercentage.value > 0.02) {
+        tmpMax = pairDistance.createBroadCast(tmpDC.value)
+        tmpDC = pairDistance.createBroadCast(0.5 * (tmpMax.value + tmpMin.value))
       }
-
-      if (neighborPercentage > 0.02) {
-        tmpMax = dc
-        dc = 0.5 * (tmpMax + tmpMin)
-      }
-      if (neighborPercentage < 0.01) {
-        tmpMin = dc
-        dc = 0.5 * (tmpMax + tmpMin)
+      if (neighborPercentage.value < 0.01) {
+        tmpMin = pairDistance.createBroadCast(tmpDC.value)
+        tmpDC = pairDistance.createBroadCast(0.5 * (tmpMax.value + tmpMin.value))
       }
     }
-
-    dc
+    tmpDC.value
   }
 
   def calRho(@transient dcThreshold : Double): Unit = {
