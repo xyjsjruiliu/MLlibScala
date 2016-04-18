@@ -4,9 +4,10 @@ import java.io.File
 
 import com.xy.lr.scala.KBSourceData
 import com.xy.lr.scala.mllibScala.clustering.DataFastClustering
+import org.apache.spark.broadcast.Broadcast
 import org.apache.spark.graphx._
 import org.apache.spark.rdd.RDD
-import org.apache.spark.{SparkConf, SparkContext}
+import org.apache.spark.{Accumulator, SparkConf, SparkContext}
 
 import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
@@ -227,8 +228,18 @@ class PairDistance extends Serializable{
     array(0)
   }
 
-  def getInitDC() : RDD[DataFastClustering] = {
+  def getInitDC(tmpMax : Double, tmpMin : Double) : RDD[DataFastClustering] = {
+    val data : DataFastClustering = new DataFastClustering(0.5 * (tmpMax + tmpMin))
+    val dataDC = new ArrayBuffer[DataFastClustering]() += data
+    sc.parallelize(dataDC)
+  }
 
+  def createAccumulator(): Accumulator[Int] ={
+    sc.accumulator(0, "My Accumulator")
+  }
+
+  def createBoradCast(): Broadcast[Double] = {
+    sc.broadcast(1)
   }
 }
 

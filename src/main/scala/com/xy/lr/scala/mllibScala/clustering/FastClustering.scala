@@ -2,6 +2,7 @@ package com.xy.lr.scala.mllibScala.clustering
 
 import com.xy.lr.scala.spark.graphx.PairDistance
 import org.apache.spark.graphx.Graph
+import org.apache.spark.rdd.RDD
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -38,29 +39,25 @@ class FastClustering(master : String, appName : String, fileName : String) exten
   def findDC(): Double = {
     @transient var tmpMax : Double = pairDistance.getMax(graph)
     @transient var tmpMin : Double = pairDistance.getMin(graph)
-
     @transient var dc = 0.5 * (tmpMax + tmpMin)
 
-    @transient var dataDC =
-      ArrayBuffer[DataFastClustering]() += new DataFastClustering(dc)
+    @transient var dataDC : RDD[Double] =
+      pairDistance.getInitDC(tmpMax, tmpMin).map(x => {
+        x.getDC()
+      })
 
-
-    println(dc)
-
-    @transient val entrySet = graph.edges.collect()
-
-    println(graph.edges.count())
+    @transient val entrySet = graph.edges
     @transient val sampleSize = graph.vertices.count()
 
     for (iteration <- 1 to 100) {
-      var neighbourNum : Int = 0
+      var neighbourNum = pairDistance.createAccumulator()
 
-      entrySet.foreach(x => {
+      entrySet.map(x => {
         if (x.attr < dc) neighbourNum += 2
       })
 
-      println(iteration + "\t" +neighbourNum)
-      val neighborPercentage = neighbourNum / Math.pow(sampleSize, 2)
+//      println(iteration + "\t" +neighbourNum)
+      val neighborPercentage = neighbourNum.value / Math.pow(sampleSize, 2)
 
       if (neighborPercentage >= 0.01 && neighborPercentage <= 0.02){
         return dc
@@ -89,11 +86,11 @@ object FastClustering {
   def main(args : Array[String]): Unit = {
     val fastClustering = new FastClustering("local[2]", "FastClustering",
       "/home/xylr/Working/IdeaProjects/KnowLedgeBase/chineseword/test.txt")
-//    println(fastClustering.findDC())
-    val dc = fastClustering.findDC()
+    println(fastClustering.findDC())
+//    val dc = fastClustering.findDC()
 
-    fastClustering.calRho(dc)
-    fastClustering.calDelta()
+//    fastClustering.calRho(dc)
+//    fastClustering.calDelta()
 
   }
 }
