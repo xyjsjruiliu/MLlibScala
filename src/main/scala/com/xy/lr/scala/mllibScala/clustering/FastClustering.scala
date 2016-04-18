@@ -35,7 +35,7 @@ class FastClustering(master : String, appName : String, fileName : String) exten
   }
 
   /**
-    *
+    * 计算横截断距离
     * @return
     */
   def findDC(): Double = {
@@ -47,22 +47,24 @@ class FastClustering(master : String, appName : String, fileName : String) exten
 
     val sampleSize = graph.vertices.count()
 
-    for (iteration <- 1 to 100) {
+    for (iteration <- 1 to 100) {//迭代100次
+      //spark累加变量
       var neighbourNum : Accumulator[Int] = pairDistance.createAccumulator(0)
+      //计算样本距离小于截断距离样本点的个数
       graph.edges.map(x => {
         if (x.attr < tmpDC.value) neighbourNum += 2
       }).count()
 
-      println(neighbourNum.value)
+      //所占的比率
       val neighborPercentage = pairDistance.createBroadCast(
         neighbourNum.value / Math.pow(sampleSize, 2))
-      if (neighborPercentage.value >= 0.01 && neighborPercentage.value <= 0.02)
+      if (neighborPercentage.value >= 0.01 && neighborPercentage.value <= 0.02)//返回结果
         tmpDC.value
-      if (neighborPercentage.value > 0.02) {
+      if (neighborPercentage.value > 0.02) {//更新计算距离
         tmpMax = pairDistance.createBroadCast(tmpDC.value)
         tmpDC = pairDistance.createBroadCast(0.5 * (tmpMax.value + tmpMin.value))
       }
-      if (neighborPercentage.value < 0.01) {
+      if (neighborPercentage.value < 0.01) {//更新计算距离
         tmpMin = pairDistance.createBroadCast(tmpDC.value)
         tmpDC = pairDistance.createBroadCast(0.5 * (tmpMax.value + tmpMin.value))
       }
@@ -71,6 +73,11 @@ class FastClustering(master : String, appName : String, fileName : String) exten
   }
 
   def calRho(@transient dcThreshold : Double): Unit = {
+    val dcBroadCast = pairDistance.createBroadCast(dcThreshold)
+    //首先求子图, 子图中所有的边都小于截断距离
+    val subGraph = graph.subgraph(epred = x => {
+      x.attr < dcBroadCast.value
+    })
   }
 
   def calDelta(): Unit = {
