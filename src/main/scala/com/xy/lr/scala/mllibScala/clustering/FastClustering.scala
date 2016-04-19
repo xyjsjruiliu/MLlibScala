@@ -3,7 +3,7 @@ package com.xy.lr.scala.mllibScala.clustering
 import com.xy.lr.scala.spark.graphx.PairDistance
 import org.apache.spark.Accumulator
 import org.apache.spark.broadcast.Broadcast
-import org.apache.spark.graphx.{Graph, VertexId, VertexRDD}
+import org.apache.spark.graphx._
 import org.apache.spark.rdd.RDD
 
 import scala.collection.mutable.ArrayBuffer
@@ -91,12 +91,26 @@ class FastClustering(master : String, appName : String,
 
     //计算局部密度
     val rho : RDD[(VertexId, Double)] =
-      outDegrees.cogroup(inDegrees).mapValues(x => x._1.sum + x._2.sum)
-        .map(x => (x._1, x._2.toDouble))
+      outDegrees.cogroup(inDegrees)
+        .mapValues(x => x._1.sum + x._2.sum).map(x => (x._1, x._2.toDouble))
+
     rho
   }
 
-  def calDelta(): Unit = {
+  /**
+    * 计算比自身局部密度最大点的距离，并且选择最小值
+    * @param rho 局部密度
+    */
+  def calDelta(rho : RDD[(VertexId, Double)]): Unit = {
+    val newVertexRDD : RDD[(VertexId, (Double, Double))] =
+      rho.map(x => (x._1, (x._2, 0.0)))
+    val newEdgeRDD : RDD[Edge[Double]] = graph.edges
+
+    //生成新的图
+    graph = Graph(newVertexRDD, newEdgeRDD)
+    graph.vertices.count()//完成之前的步骤
+
+
   }
 }
 object FastClustering {
@@ -106,8 +120,8 @@ object FastClustering {
 //    println(fastClustering.findDC())
     val dc = fastClustering.findDC()
 
-    fastClustering.calRho(dc).take(10).foreach(println(_))
-//    fastClustering.calDelta()
+    val rho = fastClustering.calRho(dc)
+    fastClustering.calDelta(rho)
 
   }
 }

@@ -5,7 +5,7 @@ import java.io.File
 import com.xy.lr.scala.KBSourceData
 import com.xy.lr.scala.mllibScala.clustering.DataFastClustering
 import org.apache.spark.broadcast.Broadcast
-import org.apache.spark.graphx._
+import org.apache.spark.graphx.{Edge, Graph, VertexId}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.{Accumulator, SparkConf, SparkContext}
 
@@ -31,6 +31,18 @@ class PairDistance extends Serializable{
     this()
     conf = new SparkConf().setAppName(appName).setMaster(master)
     sc = new SparkContext(conf)
+  }
+
+  private[graphx] def test(): Unit = {
+    val users: RDD[(VertexId, (Double, Double))] =
+      sc.parallelize(Array((3L, (0.0, 0.0)), (7L, (0.0, 0.0)),
+        (5L, (0.0, 0.0)), (2L, (0.0, 0.0))))
+    // Create an RDD for edges
+    val relationships: RDD[Edge[Double]] =
+      sc.parallelize(Array(Edge(3L, 7L, 1.0),    Edge(5L, 3L, 1.0),
+        Edge(2L, 5L, 1.0), Edge(5L, 7L, 2.0)))
+    // Build the initial Graph
+    val graph = Graph(users, relationships)
   }
 
   /*/**
