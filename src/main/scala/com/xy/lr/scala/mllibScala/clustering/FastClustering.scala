@@ -3,7 +3,7 @@ package com.xy.lr.scala.mllibScala.clustering
 import com.xy.lr.scala.spark.graphx.PairDistance
 import org.apache.spark.Accumulator
 import org.apache.spark.broadcast.Broadcast
-import org.apache.spark.graphx.Graph
+import org.apache.spark.graphx.{Graph, VertexId, VertexRDD}
 import org.apache.spark.rdd.RDD
 
 import scala.collection.mutable.ArrayBuffer
@@ -12,7 +12,8 @@ import scala.collection.mutable.ArrayBuffer
   * Created by xylr on 16-4-15.
   * com.xy.lr.scala.mllibScala.clustering
   */
-class FastClustering(master : String, appName : String, fileName : String) extends Serializable{
+class FastClustering(master : String, appName : String,
+                     fileName : String) extends Serializable{
   @transient private var pairDistance : PairDistance = _
 
   private var graph : Graph[(Double, Double), Double] = _
@@ -72,12 +73,27 @@ class FastClustering(master : String, appName : String, fileName : String) exten
     tmpDC.value
   }
 
-  def calRho(@transient dcThreshold : Double): Unit = {
-    val dcBroadCast = pairDistance.createBroadCast(dcThreshold)
+  /**
+    * 计算局部密度
+    * @param dcThreshold 截断距离
+    */
+  def calRho(@transient dcThreshold : Double): RDD[(VertexId, Double)] = {
+    val dcBroadCast = pairDistance.createBroadCast(dcThreshold)//截断距离
     //首先求子图, 子图中所有的边都小于截断距离
     val subGraph = graph.subgraph(epred = x => {
-      x.attr < dcBroadCast.value
+      if(x.attr < dcBroadCast.value) true//小于截断距离
+      else false
     })
+    //出度
+    val outDegrees : RDD[(VertexId, Int)] = subGraph.outDegrees.map(x => (x._1, x._2))
+    //入度
+    val inDegrees : RDD[(VertexId, Int)] = subGraph.inDegrees.map(x => (x._1, x._2))
+
+    //计算局部密度
+    val rho : RDD[(VertexId, Double)] =
+      outDegrees.cogroup(inDegrees).mapValues(x => x._1.sum + x._2.sum)
+        .map(x => (x._1, x._2.toDouble))
+    rho
   }
 
   def calDelta(): Unit = {
@@ -87,10 +103,10 @@ object FastClustering {
   def main(args : Array[String]): Unit = {
     val fastClustering = new FastClustering("local[2]", "FastClustering",
       "/home/xylr/Working/IdeaProjects/KnowLedgeBase/chineseword/test.txt")
-    println(fastClustering.findDC())
-//    val dc = fastClustering.findDC()
+//    println(fastClustering.findDC())
+    val dc = fastClustering.findDC()
 
-//    fastClustering.calRho(dc)
+    fastClustering.calRho(dc).take(10).foreach(println(_))
 //    fastClustering.calDelta()
 
   }
